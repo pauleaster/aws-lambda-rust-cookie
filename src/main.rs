@@ -31,7 +31,7 @@ async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Er
             .get("x-forwarded-for")
             .expect("No source ip found")
     );
-    let response_string =match Locator::get(ip_string, service).await {
+    let response_string =match Locator::get(&ip_string, service).await {
         Ok(ip) => format!("{} - {} ({})", ip.ip, ip.city, ip.country),
         Err(error) => format!("Source lookup failed: {}", error),
     };

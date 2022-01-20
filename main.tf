@@ -4,7 +4,7 @@ provider "aws" {
 
 data "archive_file" "bootstrap-zip" {
   type        = "zip"
-  source_file  = "./target/x86_64-unknown-linux-musl/release/bootstrap"
+  source_file  = "./target/release/bootstrap"
   output_path = "bootstrap.zip"
 }
 
