@@ -4,20 +4,16 @@
     in a few days.
 */
 
-use std::collections::HashMap;
+// use std::collections::HashMap;
+
 
 use lambda_http::{
     handler,
     lambda_runtime::{self, Context, Error},
-    IntoResponse, Request, RequestExt,
+    IntoResponse, Request,
 };
+use ipgeolocate::{Locator, Service};
 
-enum Headers {
-    Use,
-    DontUse,
-}
-
-const USE_HEADERS: Headers = Headers::DontUse;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -26,19 +22,18 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Error> {
-    let parameters = event.query_string_parameters();
-
-    let mut query = HashMap::new();
-    for (keys, data) in parameters.iter() {
-        query.insert(keys, data);
-    }
-    let response = match USE_HEADERS {
-        Headers::Use => {
-            let headers = event.headers();
-            format!("query:\n{:#?}\nheaders:\n{:#?}", query, headers)
-        }
-        _ => format!("query:\n{:#?}", query),
-    }
-    .into_response();
-    Ok(response)
+    
+    let service = Service::IpApi;
+    let ip_string = format!(
+        "{:?}",
+        event
+            .headers()
+            .get("x-forwarded-for")
+            .expect("No source ip found")
+    );
+    let response_string =match Locator::get(ip_string, service).await {
+        Ok(ip) => format!("{} - {} ({})", ip.ip, ip.city, ip.country),
+        Err(error) => format!("Source lookup failed: {}", error),
+    };
+    Ok(response_string.into_response())
 }

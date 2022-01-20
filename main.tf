@@ -8,8 +8,8 @@ data "archive_file" "bootstrap-zip" {
   output_path = "bootstrap.zip"
 }
 
-resource "aws_iam_role" "lambda-iam" {
-  name = "lambda-iam"
+resource "aws_iam_role" "lambda-iam-2" {
+  name = "lambda-iam-2"
   assume_role_policy = jsonencode(
     {
       "Version" : "2012-10-17",
@@ -30,26 +30,26 @@ resource "aws_iam_role" "lambda-iam" {
 
 resource "aws_lambda_function" "lambda" {
   filename         = "bootstrap.zip"
-  function_name    = "aws-lamda-rust-test-terraform"
-  role             = aws_iam_role.lambda-iam.arn
+  function_name    = "aws-lamda-rust-cookie-fn"
+  role             = aws_iam_role.lambda-iam-2.arn
   handler          = "lambda.lambda_handler"
   source_code_hash = data.archive_file.bootstrap-zip.output_base64sha256
   runtime          = "provided.al2"
 }
 
-resource "aws_apigatewayv2_api" "lambda-api" {
+resource "aws_apigatewayv2_api" "lambda-api-cookie" {
   name          = "v2-http-api"
   protocol_type = "HTTP"
 }
 
-resource "aws_apigatewayv2_stage" "lambda-stage" {
-  api_id      = aws_apigatewayv2_api.lambda-api.id
+resource "aws_apigatewayv2_stage" "lambda-api-stage" {
+  api_id      = aws_apigatewayv2_api.lambda-api-cookie.id
   name        = "$default"
   auto_deploy = true
 }
 
-resource "aws_apigatewayv2_integration" "lambda-integration" {
-  api_id               = aws_apigatewayv2_api.lambda-api.id
+resource "aws_apigatewayv2_integration" "lambda-api-integration" {
+  api_id               = aws_apigatewayv2_api.lambda-api-cookie.id
   integration_type     = "AWS_PROXY"
   integration_method   = "POST"
   integration_uri      = aws_lambda_function.lambda.invoke_arn
@@ -57,17 +57,17 @@ resource "aws_apigatewayv2_integration" "lambda-integration" {
 }
 
 resource "aws_apigatewayv2_route" "lambda-route" {
-  api_id    = aws_apigatewayv2_api.lambda-api.id
+  api_id    = aws_apigatewayv2_api.lambda-api-cookie.id
   route_key = "GET /{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda-integration.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda-api-integration.id}"
 }
 
-resource "aws_lambda_permission" "api-gw" {
+resource "aws_lambda_permission" "api-lambda-gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.lambda-api.execution_arn}/*/*/*"
+  source_arn    = "${aws_apigatewayv2_api.lambda-api-cookie.execution_arn}/*/*/*"
 }
 
 
