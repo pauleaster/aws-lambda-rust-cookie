@@ -1,28 +1,23 @@
-/*  shout out to https://www.youtube.com/watch?v=wlVcso4Ut5o
-    and https://www.youtube.com/watch?v=PmtwtK6jyLc and the docs for
-    lambda_http, lambda_runtime, and terraform that helped get me up and running
-    in a few days.
-*/
-
-// use std::collections::HashMap;
-
-
+use ipgeolocate::{Locator, Service};
 use lambda_http::{
     handler,
     lambda_runtime::{self, Context, Error},
     IntoResponse, Request,
 };
-use ipgeolocate::{Locator, Service};
 
+#[macro_use]
+extern crate log;
+extern crate simple_logger;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    simple_logger::init_with_level(log::Level::Info)?;
+    info!("Logging started.");
     lambda_runtime::run(handler(func)).await?;
     Ok(())
 }
 
 async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Error> {
-    
     let service = Service::IpApi;
     let ip_string = format!(
         "{:?}",
@@ -30,10 +25,18 @@ async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Er
             .headers()
             .get("x-forwarded-for")
             .expect("No source ip found")
-    );
-    let response_string =match Locator::get(&ip_string, service).await {
+    )
+    .replace("\"", "");
+
+    info!("ip_string = {}", &ip_string);
+    let response_string = match Locator::get(&ip_string, service).await {
         Ok(ip) => format!("{} - {} ({})", ip.ip, ip.city, ip.country),
-        Err(error) => format!("Source lookup failed: {}", error),
+        Err(error) => {
+            error!("Source lookup failed: {}", error);
+            format!("Source lookup failed: {}", error)
+        }
     };
+    
+    info!("response_string = {}", &response_string);
     Ok(response_string.into_response())
 }
