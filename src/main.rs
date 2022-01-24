@@ -17,7 +17,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn func(event: Request, _context: Context) -> Result<(), Error> {
+async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Error> {
     let service = Service::IpApi;
     let ip_string = format!(
         "{:?}",
@@ -38,6 +38,5 @@ async fn func(event: Request, _context: Context) -> Result<(), Error> {
     };
     
     info!("response_string = {}", &response_string);
-    // Ok(response_string.into_response())
-    Ok(())
+    Ok(response_string.into_response())
 }
