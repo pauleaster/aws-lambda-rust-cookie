@@ -8,4 +8,4 @@ if [ -f "$file" ] ; then
 fi
 cp ./target/release/bootstrap .
 zip bootstrap.zip bootstrap libssl.so.1.1 libcrypto.so.1.1
-terraform apply -auto-approve
+terraform apply
