@@ -80,7 +80,7 @@ resource "aws_lambda_permission" "api-lambda-gw" {
 # If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/aws_lamda_rust_cookie_fn"
-  retention_in_days = 14
+  retention_in_days = 365
 }
 
 
@@ -101,7 +101,7 @@ resource "aws_iam_policy" "lambda_logging" {
             "logs:PutLogEvents"
           ],
           "Resource" : "arn:aws:logs:*:*:*",
-          "Effect" : "Allow"
+          "Effect" : "Deny"
         }
       ]
     }
