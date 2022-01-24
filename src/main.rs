@@ -1,7 +1,7 @@
 use ipgeolocate::{Locator, Service};
-use lambda_http::{
-    handler,
-    lambda_runtime::{self, Context, Error},
+    use lambda_http::{
+        handler,
+        lambda_runtime::{self, Context, Error},
     IntoResponse, Request,
 };
 
@@ -26,7 +26,7 @@ async fn func(event: Request, _context: Context) -> Result<impl IntoResponse, Er
             .get("x-forwarded-for")
             .expect("No source ip found")
     )
-    .replace("\"", "");
+    .replace("\"", ""); // Note .split("\"").skip(1).next().unwrap() is faster
 
     info!("ip_string = {}", &ip_string);
     let response_string = match Locator::get(&ip_string, service).await {
